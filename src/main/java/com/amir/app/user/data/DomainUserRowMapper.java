@@ -6,12 +6,12 @@ import java.sql.SQLException;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 
-public class UserEntityRowMapper implements RowMapper<UserEntity>{
+public class DomainUserRowMapper implements RowMapper<DomainUser>{
 
 	@Override
-	public UserEntity map(ResultSet rs, StatementContext ctx) throws SQLException {
+	public DomainUser map(ResultSet rs, StatementContext ctx) throws SQLException {
 		
-		UserEntity ue=new UserEntity();
+		DomainUser ue=new DomainUser();
 		
 	// UserDto part 
     if(rs.getString("uname")!=null)ue.setUname(rs.getString("uname"));

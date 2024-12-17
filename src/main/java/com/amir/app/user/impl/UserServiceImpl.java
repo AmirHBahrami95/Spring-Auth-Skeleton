@@ -3,32 +3,35 @@ package com.amir.app.user.impl;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.amir.app.user.UserRepo;
 import com.amir.app.user.UserService;
-import com.amir.app.user.data.User;
-import com.amir.app.user.data.UserDto;
-import com.amir.app.user.data.UserEntity;
+import com.amir.app.user.data.DomainUserDto;
+import com.amir.app.user.data.DomainUser;
 
 public class UserServiceImpl implements UserService{
 	
-	@Autowired UserRepo userRepo;
-
+	@Autowired 
+	private UserRepo userRepo;
+	
+	@Autowired 
+	private PasswordEncoder pe;
+	
 	@Override
-	public Optional<UserDto> getUserInfo(String username) {
-		return Optional.ofNullable(userRepo.getUserInfo(username).get());
+	public Optional<DomainUser> getDomainUser(String userName) {
+		return userRepo.getDomainUser(userName);
 	}
 
 	@Override
-	public boolean addUser(UserEntity ue) {
+	public Optional<DomainUserDto> getDomainUserDto(String username) {
+		return Optional.ofNullable(userRepo.getDomainUser(username).get().toDto());
+	}
+
+	@Override
+	public boolean addUser(DomainUser ue) {
+		ue.setPass(pe.encode(ue.getPass())); // encode the fucker
 		return userRepo.add(ue);
-	}
-
-	@Override
-	public Optional<UserEntity> getUserEntity(String userName) {
-		return userRepo.getUserInfo(userName);
 	}
 
 }

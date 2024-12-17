@@ -5,54 +5,158 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.hibernate.annotations.DialectOverride.SQLRestrictions;
 import org.jdbi.v3.core.Jdbi;
-import org.jdbi.v3.sqlobject.transaction.Transaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.amir.app.user.User;
 import com.amir.app.user.UserRepo;
-import com.amir.app.user.data.User;
-import com.amir.app.user.data.UserDto;
-import com.amir.app.user.data.UserEntity;
-import com.amir.app.user.data.UserEntityRowMapper;
+import com.amir.app.user.data.DomainUser;
+import com.amir.app.user.data.DomainUserDto;
+import com.amir.app.user.data.DomainUserRowMapper;
+import com.amir.app.utils.DbUtils;
 
 @Transactional
 public class UserRepoImpl implements UserRepo{
 	
-	@Autowired Jdbi db;
-
+	final Logger logger = LoggerFactory.getLogger(UserRepoImpl.class);
+	
+	/* NOTE : I could've finalized column names too but I don't give enough shit to do that */
+	private final static String USER_TABLE="usr";
+	private final static String USER_AUTH_TABLE="usr_auth";
+	private final static String USER_INFO_TABLE="usr_info";
+	private final static String DOMAIN_USER_VIEW="domain_usr_view";
+	
+	@Autowired 
+	private Jdbi db;
+	
+	//==================== GET
+	
 	@Override
-	public Optional<User> get(String uname) {
-		Optional<UserEntity> ueo=getEntityWithAuthority(uname);	
-		return ueo.isPresent()?Optional.of(ueo.get().toUser()):Optional.empty();
+	public Optional<DomainUser> getDomainUser(String uname) {
+		return getDomainUserWithAuthority(uname);
 	}
 
 	@Override
-	public Optional<UserEntity> getUserInfo(String uname) {
-		return getEntityWithAuthority(uname);
+	public List<String> getAuthorities(String uname) {
+		return db.withHandle(h->h.createQuery("SELECT authority FROM "+USER_AUTH_TABLE+" WHERE usr_uname=:uname"))
+			.bind("uname",uname)
+			.map((rs, ctx) -> {return new String(rs.getString(1));})
+			.list();
 	}
-
+	
+	private Optional<DomainUser> getDomainUserWithAuthority(String uname){
+		Optional<DomainUser> ueo=selectDomainUser(uname);
+		if(ueo.isEmpty()) return Optional.empty();
+		ueo.get().setAuths(getAuthorities(uname));
+		return ueo;
+	}
+	
+	private Optional<DomainUser> selectDomainUser(String uname){
+		List<DomainUser> dus=db.withHandle(h->h.createQuery("SELECT * FROM "+DOMAIN_USER_VIEW+" WHERE uname=:uname"))
+			.bind("uname",uname)
+			.map(new DomainUserRowMapper())
+			.list();
+		return dus.size()>0?Optional.of(dus.get(0)):Optional.empty();
+	}
+	
+	// ==================== ADD
+	
 	@Override
-	public boolean add(UserEntity u) {
-		// 3 separate if's to prevent unnecessary
-		// database calls if any of them fails
-		if(!insertUser(u.toUser())) return false;
-		if(!insertUserAuth(u.toUser())) return false;
+	@Transactional
+	public boolean add(DomainUser u) {
+		if(!insertUser(u))return false;
+		if(!insertUserAuth(u))return false;
 		if(!insertUserInfo(u))return false;
 		return true;
 	}
 
-	@Override
-	public boolean disable(String uname) { // TODO
-		return true;
+	@Transactional
+	private boolean insertUser(DomainUser u) {
+		return db.withHandle(h->h.createUpdate("INSERT INTO "+USER_TABLE+"(uname,pass) VALUES(:uname,:pass)"))
+			.bind("uname", u.getUname())
+			.bind("pass", u.getPass())
+			.execute()>0;
+	}
+	
+	@Transactional
+	private boolean insertUserAuth(DomainUser u) {
+		return db.withHandle(h->h.createUpdate("INSERT INTO usr_auth(usr_uname) VALUES(:uname)"))
+			.bind("uname",u.getUname())
+			.execute()>0;
+	}
+	
+	@Transactional
+	private boolean insertUserInfo(DomainUser ue) {
+		Map<String,String> args=buildInsertArgs(ue);
+		String q=buildInsertQuery(ue,args);
+		// logger.error("insert-query:"+q);
+		return db.withHandle(h->h.createUpdate(q)).bindMap(args).execute()>0;
+	}
+	
+	private String buildInsertQuery(DomainUser ue,Map<String,String> args) {
+		
+		StringBuffer q=new StringBuffer();
+		q.append("INSERT INTO "+USER_INFO_TABLE+"(usr_uname,");
+		q.append(DbUtils.expandInsertQuery(args));
+		
+		StringBuffer v=new StringBuffer(" VALUES(:uname,");
+		v.append(DbUtils.expandInsertValues(args));
+		args.put("uname", ue.getUname());
+		
+		q.append(") ");
+		v.append(")");
+		q.append(v);
+		
+		return q.toString();
+	}
+	
+	private Map<String,String> buildInsertArgs(DomainUser ue){
+		Map<String,String> args=new HashMap<>();
+		if(ue.getEmail()!=null && !ue.getEmail().isBlank())args.put("email",ue.getEmail());
+		if(ue.getFname()!=null && !ue.getFname().isBlank())args.put("fname",ue.getFname());
+		if(ue.getLname()!=null && !ue.getLname().isBlank())args.put("lname",ue.getLname());
+		if(ue.getPhoneNo()!=null && !ue.getPhoneNo().isBlank())args.put("phone_no",ue.getPhoneNo());
+		if(ue.getNatCode()!=null && !ue.getNatCode().isBlank())args.put("nat_code",ue.getNatCode());
+		return args;
 	}
 
+	
+	// ==================== UPDATE
+	
 	@Override
-	public boolean update(UserDto u) { // TODO
-		return true;
+	public boolean update(DomainUserDto u) {
+		Map<String,String> args=buildUpdateArgs(u);
+		String q=buildUpdateQuery(u, args);
+		return db.withHandle(h->h.createUpdate(q)).bindMap(args).execute()>0;
+	}
+	
+	private String buildUpdateQuery(DomainUserDto ue,Map<String,String> args) {
+		StringBuffer q=new StringBuffer("UPDATE "+USER_INFO_TABLE+" SET ");
+		q.append(DbUtils.expandUpdateQuery(args));
+		q.append(" WHERE uname=:uname");
+		args.put("uname", ue.getUname()); // SHOULD "NOT" happen before this point 
+		return q.toString();
+	}
+	
+	private Map<String,String> buildUpdateArgs(DomainUserDto ue) {
+		Map<String,String> args=new HashMap<>();
+		if(ue.getEmail()!=null && !ue.getEmail().isBlank())args.put("email",ue.getEmail());
+		if(ue.getFname()!=null && !ue.getFname().isBlank())args.put("fname",ue.getFname());
+		if(ue.getLname()!=null && !ue.getLname().isBlank())args.put("lname",ue.getLname());
+		if(ue.getPhoneNo()!=null && !ue.getPhoneNo().isBlank())args.put("phone_no",ue.getPhoneNo());
+		return args;
+	}
+	
+	//==================== DISABLE & CHANGE_PASS
+	
+	@Override
+	public boolean disable(String uname) {
+		return db.withHandle(h->h.createUpdate("UPDATE "+USER_TABLE+" SET is_enabled=FALSE WHERE uname=:uname"))
+			.bind("uname",uname)
+			.execute()>0;
 	}
 
 	@Override
@@ -60,104 +164,5 @@ public class UserRepoImpl implements UserRepo{
 		// TODO Auto-generated method stub
 		return false;
 	}
-	
-
-	private List<String> getAuthorities(String uname){
-		List<String> uaths=db.withHandle(h->h.createQuery(
-				"SELECT authority FROM usr_auth_view"
-				+" WHERE uname=:uname"
-			))
-			.bind("uname", uname)
-			.map((rs, ctx) -> {
-				return new String(rs.getString(1));
-			})
-			.list();
-		return uaths;
-	}
-	
-	@Transactional
-	private boolean insertUser(User u) {
-		return db.withHandle(h->h.createUpdate("INSERT INTO usr(uname,pass) VALUES(:uname,:pass)"))
-			.bind("uname", u.getUsername())
-			.bind("pass", u.getPassword())
-			.execute()>0;
-	}
-	
-	/**
-	 * For now, only the default 'USER' authority is set,
-	 * and if there's an admin, you change it manually in the db.
-	 * @return success
-	 */
-	private boolean insertUserAuth(User u) {
-		return db.withHandle(h->h.createUpdate("INSERT INTO usr_auth(usr_uname) VALUES(:uname)"))
-			.bind("uname",u.getUsername())
-			.execute()>0;
-	}
-	
-	private boolean insertUserInfo(UserEntity ue) {
-		StringBuffer q=new StringBuffer();
-		StringBuffer v=new StringBuffer();
-		Map<String,String> args=new HashMap<>();
-		buildUserEntityQuery(ue, q, v, args);
-		return db.withHandle(h->h.createUpdate(q)).bindMap(args).execute()>0;
-	}
-	
-	private Optional<UserEntity> getEntityWithAuthority(String uname){
-		Optional<UserEntity> ueo=getEntity(uname);
-		if(ueo.isEmpty()) return Optional.empty();
-		ueo.get().setAuths(getAuthorities(uname));
-		return ueo;
-	}
-	
-	private Optional<UserEntity> getEntity(String uname) {
-		List<UserEntity>ues=db.withHandle(h->h.createQuery("SELECT * FROM usr_extended_view WHERE uname=:uname"))
-		.bind("uname",uname)
-		.map(new UserEntityRowMapper())
-		.list();
-		return ues.size()>0?Optional.of(ues.get(0)):Optional.empty();
-	}
-	
-	private void buildUserEntityQuery(UserEntity ue,StringBuffer q,
-	StringBuffer v,Map<String,String> args) {
-		q.append("INSERT INTO usr_info(usr_uname");
-		v.append(" VALUES(:uname");
-		args.put("uname", ue.getUname());
-		
-		if(ue.getEmail()!=null && !ue.getEmail().isBlank()) {
-			q.append(",email");
-			v.append(",:email");
-			args.put("email",ue.getEmail());
-		}
-		
-		// these if clauses are generated by vim 8-)
-		if(ue.getFname()!=null && !ue.getFname().isBlank()) {
-			q.append(",fname");
-			v.append(",:fname");
-			args.put("fname",ue.getFname());
-		}
-		
-		if(ue.getLname()!=null && !ue.getLname().isBlank()) { 
-		  q.append(",lname");
-		  v.append(",:lname");
-		  args.put("lname",ue.getLname());
-		}
-		
-		if(ue.getPhoneNo()!=null && !ue.getPhoneNo().isBlank()) {
-		  q.append(",phone_no");
-		  v.append(",:phone_no");
-		  args.put("phone_no",ue.getPhoneNo());
-		}
-		
-		if(ue.getNatCode()!=null && !ue.getNatCode().isBlank()) {
-		  q.append(",nat_code");
-		  v.append(",:nat_code");
-		  args.put("nat_code",ue.getNatCode());
-		}       
-		
-		q.append(") ");
-		v.append(")");
-		q.append(v);
-	}
-
 
 }

@@ -2,12 +2,11 @@ package com.amir.app.user;
 
 import java.util.Optional;
 
-import com.amir.app.user.data.UserDto;
-import com.amir.app.user.data.UserEntity;
+import com.amir.app.user.data.DomainUserDto;
+import com.amir.app.user.data.DomainUser;
 
 public interface UserService{
-	public Optional<UserEntity> getUserEntity(String userName);
-	public Optional<UserDto> getUserInfo(String username);
-	// public List<String> getUserAuthorities(String uname); // TODO
-	public boolean addUser(UserEntity ue);
+	public Optional<DomainUser> getDomainUser(String userName); // full full
+	public Optional<DomainUserDto> getDomainUserDto(String username); // only what the end user needs to seee
+	public boolean addUser(DomainUser ue);
 }

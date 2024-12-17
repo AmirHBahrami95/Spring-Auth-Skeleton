@@ -11,15 +11,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.amir.app.user.data.User;
-import com.amir.app.user.data.UserDto;
-import com.amir.app.user.data.UserEntity;
+import com.amir.app.user.data.DomainUserDto;
+import com.amir.app.user.data.DomainUser;
 
 @RestController
 @RequestMapping(path="/api/user")
 public class UserController {
 	
-	@Autowired UserService userService;
+	@Autowired 
+	private UserService userService;
 	
 	@GetMapping("/hello")
 	public ResponseEntity<String> hello(){
@@ -27,14 +27,13 @@ public class UserController {
 	}
 	
 	@PostMapping(path = "/register",name = "/register",produces = "application/json",consumes = "application/json")
-	public ResponseEntity<String> register(@RequestBody UserEntity ue){ // TODO add "where's the problem support"
+	public ResponseEntity<String> register(@RequestBody DomainUser ue){ // TODO add "where's the problem support"
 		return userService.addUser(ue)?ResponseEntity.ok().build():ResponseEntity.badRequest().build();
 	}
 	
 	@GetMapping(path="/{username}",produces="application/json")
-	public ResponseEntity<UserDto> getUserDto(@PathVariable(value="username") String username){
-		return ResponseEntity.of(userService.getUserInfo(username));
+	public ResponseEntity<DomainUserDto> getUserDto(@PathVariable(value="username") String username){
+		return ResponseEntity.of(userService.getDomainUserDto(username));
 	}
-	
 	
 }

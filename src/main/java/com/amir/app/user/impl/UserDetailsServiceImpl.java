@@ -8,17 +8,19 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import com.amir.app.user.UserService;
-import com.amir.app.user.data.User;
-import com.amir.app.user.data.UserEntity;
+import com.amir.app.user.data.DomainUser;
+import com.amir.app.user.data.UserImpl;
 
+/** Only to be used by Spring Security internally. */
 public class UserDetailsServiceImpl implements UserDetailsService{
 	
-	@Autowired UserService userService;
+	@Autowired 
+	private UserService userService;
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException { // needed by spring security
-		Optional<UserEntity> ud=userService.getUserEntity(username);
+		Optional<DomainUser> ud=userService.getDomainUser(username);
 		if(ud.isEmpty()) throw new UsernameNotFoundException("User '"+username+"' was not found");
-		return ud.get().toUser();
+		return new UserImpl(ud.get()); // wrap DomainUser object inside our version of UserDetials 
 	}
 }

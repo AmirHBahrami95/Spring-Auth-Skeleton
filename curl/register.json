@@ -1,8 +1,7 @@
 {
   "uname": "amirbahrami95",
-  "password": "some_dipshit_password",
+  "pass": "some_dipshit_password",
   "fname": "amir",
   "lname": "bahrami",
-  "email": "ezekiel2088@gmail.com",
-  "passwordRepeat": "some_dipshit_password"
+  "email": "ezekiel2088@gmail.com"
 }

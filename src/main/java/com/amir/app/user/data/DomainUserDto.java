@@ -2,14 +2,14 @@ package com.amir.app.user.data;
 
 /**A class to communicate with Front-end, without 
  * exposing user's Password hash or other sensetive info (like NationalCode).*/
-public class UserDto {
+public class DomainUserDto {
 	
 	protected String uname;
 	protected String fname;
 	protected String lname;
 	protected String email;
 	protected String phoneNo;
-	private boolean enabled;
+	protected boolean enabled;	
 
 	public String getUname() {
 		return uname;
