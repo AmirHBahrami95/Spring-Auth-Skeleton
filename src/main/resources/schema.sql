@@ -2,11 +2,6 @@ DROP DATABASE IF EXISTS skel;
 CREATE DATABASE skel;
 USE skel;
 
-DROP TABLE IF EXISTS usr;
-DROP TABLE IF EXISTS usr_auth;
-DROP TABLE IF EXISTS usr_info;
-DROP VIEW  IF EXISTS usr_extended_view;
-
 CREATE TABLE IF NOT EXISTS usr(
 	uname VARCHAR(32) PRIMARY KEY,
 	pass VARCHAR(255),
@@ -15,7 +10,11 @@ CREATE TABLE IF NOT EXISTS usr(
 
 CREATE TABLE IF NOT EXISTS usr_auth(
 	usr_uname VARCHAR(32) PRIMARY KEY,
-	authority ENUM('USER','ADMIN') DEFAULT 'USER' 
+	authority ENUM('USER','ADMIN') DEFAULT 'USER',
+	
+	FOREIGN KEY (usr_uname) 
+		REFERENCES usr(uname)
+		ON DELETE CASCADE
 );
 
 /* along with usr makes up the domain user */
@@ -26,10 +25,47 @@ CREATE TABLE IF NOT EXISTS usr_info(
 	fname VARCHAR(32) DEFAULT NULL,
 	lname VARCHAR(32) DEFAULT NULL,
 	phone_no VARCHAR(16) DEFAULT NULL,
-	nat_code VARCHAR(32) DEFAULT NULL
+	nat_code VARCHAR(32) DEFAULT NULL,
+	
+	FOREIGN KEY (usr_uname) 
+		REFERENCES usr(uname)
+		ON DELETE CASCADE
 );
 
-/* you can add other tables like usr_addr or whatever if u want */
+/* should be created once and only get updated upon change */
+CREATE TABLE IF NOT EXISTS usr_stats(
+	usr_uname VARCHAR(32) PRIMARY KEY,
+	last_online DATETIME DEFAULT NULL,
+	last_login DATETIME DEFAULT NULL,
+	joined_at DATETIME DEFAULT NULL,
+	validated BOOLEAN DEFAULT FALSE,
+	
+	FOREIGN KEY (usr_uname) 
+		REFERENCES usr(uname)
+		ON DELETE CASCADE
+);
+
+/* log user activities like login' and 'last online' etc.
+CREATE TABLE IF NOT EXISTS usr_log(
+	usr_uname VARCHAR(32) NOT NULL,
+	title VARCHAR(255) NOT NULL,
+	msg TEXT DEFAULT NULL,
+	dt DATETIME DEFAULT CURRENT_TIMESTAMP,
+	
+	FOREIGN KEY (usr_uname) 
+		REFERENCES usr(uname)
+		ON DELETE CASCADE
+);
+*/
+
+/*
+TODO 
+CREATE TABLE IF NOT EXISTS usr_validation(
+	usr_uname VARCHAR(32) PRIMARY KEY,
+	activation_code VARCHAR(32) NOT NULL,
+	FOREIGN KEY usr_uname REFERENCES usr(uname)
+);
+*/
 
 /* to get all user's information (except for authorities) */
 CREATE VIEW IF NOT EXISTS domain_usr_view AS 

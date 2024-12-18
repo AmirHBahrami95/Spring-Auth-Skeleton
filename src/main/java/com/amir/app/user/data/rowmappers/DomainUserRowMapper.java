@@ -1,10 +1,12 @@
-package com.amir.app.user.data;
+package com.amir.app.user.data.rowmappers;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
+
+import com.amir.app.user.data.DomainUser;
 
 public class DomainUserRowMapper implements RowMapper<DomainUser>{
 
@@ -13,8 +15,8 @@ public class DomainUserRowMapper implements RowMapper<DomainUser>{
 		
 		DomainUser ue=new DomainUser();
 		
-	// UserDto part 
-    if(rs.getString("uname")!=null)ue.setUname(rs.getString("uname"));
+		// UserDto part 
+    if(rs.getString("uname")!=null)ue.setUname(rs.getString("uname")); // XXX this is problematic if uname IS null !! 
     if(rs.getString("email")!=null)ue.setEmail(rs.getString("email"));
     if(rs.getString("fname")!=null)ue.setFname(rs.getString("fname"));
     if(rs.getString("lname")!=null)ue.setLname(rs.getString("lname"));

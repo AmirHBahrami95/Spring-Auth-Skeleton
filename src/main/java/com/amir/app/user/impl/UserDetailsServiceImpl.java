@@ -9,7 +9,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import com.amir.app.user.UserService;
 import com.amir.app.user.data.DomainUser;
-import com.amir.app.user.data.UserImpl;
 
 /** Only to be used by Spring Security internally. */
 public class UserDetailsServiceImpl implements UserDetailsService{

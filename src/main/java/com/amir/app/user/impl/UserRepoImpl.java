@@ -6,22 +6,18 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.jdbi.v3.core.Jdbi;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.amir.app.user.User;
 import com.amir.app.user.UserRepo;
 import com.amir.app.user.data.DomainUser;
-import com.amir.app.user.data.DomainUserDto;
-import com.amir.app.user.data.DomainUserRowMapper;
+import com.amir.app.user.data.rowmappers.DomainUserRowMapper;
 import com.amir.app.utils.DbUtils;
 
 @Transactional
 public class UserRepoImpl implements UserRepo{
 	
-	final Logger logger = LoggerFactory.getLogger(UserRepoImpl.class);
+	// private final Logger logger = LoggerFactory.getLogger(UserRepoImpl.class);
 	
 	/* NOTE : I could've finalized column names too but I don't give enough shit to do that */
 	private final static String USER_TABLE="usr";
@@ -90,7 +86,7 @@ public class UserRepoImpl implements UserRepo{
 	
 	@Transactional
 	private boolean insertUserInfo(DomainUser ue) {
-		Map<String,String> args=buildInsertArgs(ue);
+		Map<String,String> args=buildArgs(ue);
 		String q=buildInsertQuery(ue,args);
 		// logger.error("insert-query:"+q);
 		return db.withHandle(h->h.createUpdate(q)).bindMap(args).execute()>0;
@@ -112,28 +108,18 @@ public class UserRepoImpl implements UserRepo{
 		
 		return q.toString();
 	}
-	
-	private Map<String,String> buildInsertArgs(DomainUser ue){
-		Map<String,String> args=new HashMap<>();
-		if(ue.getEmail()!=null && !ue.getEmail().isBlank())args.put("email",ue.getEmail());
-		if(ue.getFname()!=null && !ue.getFname().isBlank())args.put("fname",ue.getFname());
-		if(ue.getLname()!=null && !ue.getLname().isBlank())args.put("lname",ue.getLname());
-		if(ue.getPhoneNo()!=null && !ue.getPhoneNo().isBlank())args.put("phone_no",ue.getPhoneNo());
-		if(ue.getNatCode()!=null && !ue.getNatCode().isBlank())args.put("nat_code",ue.getNatCode());
-		return args;
-	}
 
 	
 	// ==================== UPDATE
 	
 	@Override
-	public boolean update(DomainUserDto u) {
-		Map<String,String> args=buildUpdateArgs(u);
+	public boolean update(DomainUser u) {
+		Map<String,String> args=buildArgs(u);
 		String q=buildUpdateQuery(u, args);
 		return db.withHandle(h->h.createUpdate(q)).bindMap(args).execute()>0;
 	}
 	
-	private String buildUpdateQuery(DomainUserDto ue,Map<String,String> args) {
+	private String buildUpdateQuery(DomainUser ue,Map<String,String> args) {
 		StringBuffer q=new StringBuffer("UPDATE "+USER_INFO_TABLE+" SET ");
 		q.append(DbUtils.expandUpdateQuery(args));
 		q.append(" WHERE uname=:uname");
@@ -141,12 +127,13 @@ public class UserRepoImpl implements UserRepo{
 		return q.toString();
 	}
 	
-	private Map<String,String> buildUpdateArgs(DomainUserDto ue) {
+	private Map<String,String> buildArgs(DomainUser ue){
 		Map<String,String> args=new HashMap<>();
 		if(ue.getEmail()!=null && !ue.getEmail().isBlank())args.put("email",ue.getEmail());
 		if(ue.getFname()!=null && !ue.getFname().isBlank())args.put("fname",ue.getFname());
 		if(ue.getLname()!=null && !ue.getLname().isBlank())args.put("lname",ue.getLname());
 		if(ue.getPhoneNo()!=null && !ue.getPhoneNo().isBlank())args.put("phone_no",ue.getPhoneNo());
+		if(ue.getNatCode()!=null && !ue.getNatCode().isBlank())args.put("nat_code",ue.getNatCode());
 		return args;
 	}
 	
@@ -161,7 +148,7 @@ public class UserRepoImpl implements UserRepo{
 
 	@Override
 	public boolean changePass(String uname, String newPass) {
-		// TODO Auto-generated method stub
+		// TODO implement change pass functionality
 		return false;
 	}
 

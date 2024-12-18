@@ -27,7 +27,9 @@ public class UserController {
 	}
 	
 	@PostMapping(path = "/register",name = "/register",produces = "application/json",consumes = "application/json")
-	public ResponseEntity<String> register(@RequestBody DomainUser ue){ // TODO add "where's the problem support"
+	public ResponseEntity<String> register(@RequestBody DomainUser ue){ 
+		// TODO add "where's the problem support"
+		// TODO return a jwt or a token or sth
 		return userService.addUser(ue)?ResponseEntity.ok().build():ResponseEntity.badRequest().build();
 	}
 	

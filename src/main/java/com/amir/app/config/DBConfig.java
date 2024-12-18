@@ -12,14 +12,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 
 @Configuration
-public class GeneralConfig {
+public class DBConfig {
 		
 	@Bean
 	public Jdbi jdbi(DataSource ds, List<JdbiPlugin> jdbiPlugins, List<RowMapper<?>> rowMappers) {        
-	    TransactionAwareDataSourceProxy proxy = new TransactionAwareDataSourceProxy(ds);        
-	    Jdbi jdbi = Jdbi.create(proxy);
-	    jdbiPlugins.forEach(jdbi::installPlugin);
-	    rowMappers.forEach(jdbi::registerRowMapper);
-	    return jdbi;
+    TransactionAwareDataSourceProxy proxy = new TransactionAwareDataSourceProxy(ds);        
+    Jdbi jdbi = Jdbi.create(proxy);
+    jdbiPlugins.forEach(jdbi::installPlugin);
+    rowMappers.forEach(jdbi::registerRowMapper);
+    return jdbi;
 	}
+	
 }

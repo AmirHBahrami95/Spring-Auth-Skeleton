@@ -1,8 +1,12 @@
-package com.amir.app.user.data;
+package com.amir.app.user.impl;
 
 import java.util.Collection;
+
 import org.springframework.security.core.GrantedAuthority;
+
 import com.amir.app.user.User;
+import com.amir.app.user.data.DomainUser;
+import com.amir.app.user.data.DomainUserDto;
 
 /** Used for authentications inside a session AND for redis. 
  * Objects of this class are used ENTIRELY FOR SPRING SECURITY 

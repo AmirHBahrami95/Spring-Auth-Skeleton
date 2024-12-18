@@ -11,6 +11,6 @@ public interface UserRepo {
 	public List<String> getAuthorities(String uname);
 	public boolean add(DomainUser u);
 	public boolean disable(String uname);
-	public boolean update(DomainUserDto u);
-	public boolean changePass(String uname,String newPass);
+	public boolean update(DomainUser u);
+	public boolean changePass(String uname,String newPass); // NOTE : changePass should be separate than an update request with new pass!
 }

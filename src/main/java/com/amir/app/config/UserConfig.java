@@ -10,9 +10,11 @@ import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 
 import com.amir.app.user.UserRepo;
 import com.amir.app.user.UserService;
+import com.amir.app.user.UserStatsRepo;
 import com.amir.app.user.impl.UserDetailsServiceImpl;
 import com.amir.app.user.impl.UserRepoImpl;
 import com.amir.app.user.impl.UserServiceImpl;
+import com.amir.app.user.impl.UserStatsRepoImpl;
 
 @Configuration
 public class UserConfig {
@@ -30,6 +32,11 @@ public class UserConfig {
 	@Bean
 	public UserRepo userRepo() {
 		return new UserRepoImpl();
+	}
+	
+	@Bean
+	public UserStatsRepo userStatsRepo() {
+		return new UserStatsRepoImpl(); 
 	}
 	
 	@Bean 
