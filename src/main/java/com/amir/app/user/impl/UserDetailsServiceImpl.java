@@ -18,7 +18,7 @@ public class UserDetailsServiceImpl implements UserDetailsService{
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException { // needed by spring security
-		Optional<DomainUser> ud=userService.getDomainUser(username);
+		Optional<DomainUser> ud=userService.getByUname(username);
 		if(ud.isEmpty()) throw new UsernameNotFoundException("User '"+username+"' was not found");
 		return new UserImpl(ud.get()); // wrap DomainUser object inside our version of UserDetials 
 	}

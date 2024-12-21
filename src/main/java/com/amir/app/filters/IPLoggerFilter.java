@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.amir.app.user.impl.UserRepoImpl;
 
@@ -13,10 +14,12 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-public class IPLoggerFilter implements Filter{
+public class IPLoggerFilter extends OncePerRequestFilter{
 	
 	final Logger logger = LoggerFactory.getLogger(IPLoggerFilter.class);
+	
 	private static final String[] POSSIBLE_IP_HEADERS = {
       "X-Forwarded-For",
       "Proxy-Client-IP",
@@ -42,8 +45,10 @@ public class IPLoggerFilter implements Filter{
 	  return buff.toString();
 	}
 
+
 	@Override
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+			throws ServletException, IOException {
 		HttpServletRequest hreq=(HttpServletRequest)request;
 		logger.info(getClientIp(hreq));
 		chain.doFilter(request, response);

@@ -2,6 +2,9 @@ DROP DATABASE IF EXISTS skel;
 CREATE DATABASE skel;
 USE skel;
 
+CREATE USER IF NOT EXISTS skel@localhost IDENTIFIED BY 'skel';
+GRANT ALL ON skel.* TO skel@localhost;
+
 CREATE TABLE IF NOT EXISTS usr(
 	uname VARCHAR(32) PRIMARY KEY,
 	pass VARCHAR(255),
@@ -32,6 +35,21 @@ CREATE TABLE IF NOT EXISTS usr_info(
 		ON DELETE CASCADE
 );
 
+/* to get all user's information (except for authorities and token) and to show it to user */
+CREATE VIEW IF NOT EXISTS domain_usr_view AS 
+SELECT 
+	u.uname AS uname,
+	u.pass AS pass,
+	u.is_enabled AS is_enabled,
+	ui.email AS email,
+	ui.fname AS fname,
+	ui.lname AS lname,
+	ui.phone_no AS phone_no,
+	ui.nat_code AS nat_code
+FROM usr u
+INNER JOIN usr_info ui
+ON u.uname=ui.usr_uname;
+
 /* should be created once and only get updated upon change */
 CREATE TABLE IF NOT EXISTS usr_stats(
 	usr_uname VARCHAR(32) PRIMARY KEY,
@@ -44,6 +62,33 @@ CREATE TABLE IF NOT EXISTS usr_stats(
 		REFERENCES usr(uname)
 		ON DELETE CASCADE
 );
+
+/* simple tokens instead of jwt (as of this version) */
+CREATE TABLE IF NOT EXISTS usr_token(
+	token VARCHAR(255) NOT NULL,
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	usr_uname VARCHAR(32) NOT NULL,
+	
+	FOREIGN KEY (usr_uname) 
+		REFERENCES usr(uname)
+		ON DELETE CASCADE	
+);
+
+/* to catch all user informations in one go */
+CREATE VIEW IF NOT EXISTS usr_token_view AS
+SELECT 
+	u.uname AS uname,
+	"-" AS pass,
+	u.is_enabled AS is_enabled,
+	ui.email AS email,
+	ui.fname AS fname,
+	ui.lname AS lname,
+	ut.token AS token,
+	"-" AS phone_no,
+	"-" AS nat_code,
+	ut.created_at AS created_at
+FROM usr u INNER JOIN usr_token ut INNER JOIN usr_info ui
+ON u.uname=ut.usr_uname AND u.uname=ui.usr_uname;
 
 /* log user activities like login' and 'last online' etc.
 CREATE TABLE IF NOT EXISTS usr_log(
@@ -66,19 +111,4 @@ CREATE TABLE IF NOT EXISTS usr_validation(
 	FOREIGN KEY usr_uname REFERENCES usr(uname)
 );
 */
-
-/* to get all user's information (except for authorities) */
-CREATE VIEW IF NOT EXISTS domain_usr_view AS 
-SELECT 
-	u.uname AS uname,
-	u.pass AS pass,
-	u.is_enabled AS is_enabled,
-	ui.email AS email,
-	ui.fname AS fname,
-	ui.lname AS lname,
-	ui.phone_no AS phone_no,
-	ui.nat_code AS nat_code
-FROM usr u
-INNER JOIN usr_info ui
-ON u.uname=ui.usr_uname;
 	
