@@ -27,10 +27,10 @@ public class TokenAuthenticationFilter extends BasicAuthenticationFilter{
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) 
 	throws IOException, ServletException {
 		Optional<String> token=getBearerToken(request);
-		if(!token.isEmpty()) {
-		SecurityContextHolder.getContext().setAuthentication(
-				super.getAuthenticationManager()
-					.authenticate(new TokenAuthentication(token.get(), null)));
+		if(token.isPresent()) {
+			SecurityContextHolder.getContext().setAuthentication(
+					super.getAuthenticationManager().authenticate(
+							new TokenAuthentication(token.get(), null)));
 		}
 		chain.doFilter(request, response);
 	}

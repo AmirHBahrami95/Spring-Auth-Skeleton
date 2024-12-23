@@ -9,7 +9,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 
 import com.amir.app.user.UserService;
-import com.amir.app.user.UserTokenRepo;
 import com.amir.app.user.data.DomainUser;
 import com.amir.app.user.impl.UserImpl;
 
@@ -26,7 +25,12 @@ public class TokenAuthenticationProvider implements AuthenticationProvider{
 	@Override
 	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 		Optional<DomainUser> du=userService.getByCredentials(authentication.getCredentials().toString());
-		return du.isPresent()?new TokenAuthentication("yeah,sure buddy!", new UserImpl(du.get())):null;
+		TokenAuthentication ta=null;
+		if(du.isPresent()) {
+			ta=new TokenAuthentication("yeah,sure buddy!",new UserImpl(du.get()));
+			ta.setAuthenticated(true);
+		}
+		return ta;
 	}
 	
 	@Override

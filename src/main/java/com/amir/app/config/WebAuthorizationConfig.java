@@ -28,6 +28,7 @@ public class WebAuthorizationConfig {
     http
     .authorizeHttpRequests(c -> c    		
     		.requestMatchers("/api/user/logout").authenticated()
+    		.requestMatchers("/api/user/whoami").permitAll()
         .requestMatchers("/api/user/**").permitAll()
         .anyRequest().authenticated()
     )

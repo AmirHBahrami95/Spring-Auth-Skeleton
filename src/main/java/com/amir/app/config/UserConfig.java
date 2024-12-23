@@ -1,4 +1,4 @@
-package com.amir.app.user;
+package com.amir.app.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -6,6 +6,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.amir.app.user.UserRepo;
+import com.amir.app.user.UserService;
+import com.amir.app.user.UserStatsRepo;
+import com.amir.app.user.UserTokenRepo;
 import com.amir.app.user.impl.UserDetailsServiceImpl;
 import com.amir.app.user.impl.UserRepoImpl;
 import com.amir.app.user.impl.UserServiceImpl;

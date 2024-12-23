@@ -1,6 +1,7 @@
 package com.amir.app.user.impl;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -51,6 +52,8 @@ public class UserServiceImpl implements UserService{
 	@Override
 	public Optional<DomainUser> getByCredentials(String credentials){
 		Optional<UserToken> du=userTokenRepo.getByToken(credentials);
+		List<String> auths=userRepo.getAuthorities(du.get().getDomainUser().getUname());
+		du.get().getDomainUser().setAuths(auths);
 		return du.isPresent()?Optional.of(du.get().getDomainUser()):Optional.empty();
 	}
 

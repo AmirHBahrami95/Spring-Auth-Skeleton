@@ -2,8 +2,6 @@ package com.amir.app.user;
 
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -18,14 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.amir.app.user.data.DomainUserDto;
 import com.amir.app.user.data.UserToken;
-import com.amir.app.user.impl.UserServiceImpl;
 import com.amir.app.user.data.DomainUser;
 
 @RestController
 @RequestMapping(path="/api/user")
 public class UserController {
-	
-	private final Logger logger = LoggerFactory.getLogger(UserController.class);
 	
 	@Autowired 
 	private UserService userService;
@@ -56,6 +51,12 @@ public class UserController {
 		}catch(BadCredentialsException bce) { 
 			return ResponseEntity.badRequest().build();
 		}
+	}
+	
+	@GetMapping(path="/whoami",produces="application/json")
+	public ResponseEntity<DomainUserDto> whoami(Authentication a){
+		DomainUser du=(DomainUser)a.getDetails(); // works fine
+		return ResponseEntity.ofNullable(du.toDto());
 	}
 	
 	@PostMapping(path = "/logout",produces = "application/json" )

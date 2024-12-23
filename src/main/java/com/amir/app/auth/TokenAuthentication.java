@@ -21,8 +21,8 @@ public class TokenAuthentication implements Authentication{
 	
 	public TokenAuthentication(String token,User user) {
 		this.token=token;
-		this.user=user;
-		this.authenticated=false;
+		this.user=user; // XXX this guy is null if u print it, but if u use it elsewhere it's ok! :|
+		this.authenticated=false; // XXX DO NOT forget to setAuthenticated(true) in the provider
 	}
 	
 	@Override	public Object getCredentials() {return token;}

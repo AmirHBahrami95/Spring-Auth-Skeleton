@@ -9,12 +9,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class TokenAuthenticationManager implements AuthenticationManager {
 	
-	@Autowired // TODO make this active again, this isn't working rn 
+	@Autowired
 	private TokenAuthenticationProvider authProv;
-	
-	/*public TokenAuthenticationManager() {
-		this.authProv=new TokenAuthenticationProvider();
-	}*/
 
 	@Override
 	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
